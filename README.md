@@ -1,4 +1,4 @@
-# AI based Bottleneck Detection in Heterogeneous Systems
+# 📈 AI based Bottleneck Detection in Heterogeneous Systems
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
 ![Flask](https://img.shields.io/badge/Flask-3.0-lightgrey?logo=flask)

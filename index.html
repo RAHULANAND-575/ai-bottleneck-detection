@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Bottleneck Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- ── Header ──────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="header-icon">🧠</span>
+      <div>
+        <h1 class="app-title">AI Bottleneck Detection</h1>
+        <p class="app-subtitle">Heterogeneous Systems Performance Monitor</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="status-badge" class="status-badge status-offline">
+        <span class="status-dot"></span>
+        Offline
+      </span>
+      <button id="run-analysis-btn" class="btn btn-primary" onclick="runAnalysis()">
+        ⚡ Run Analysis
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Main content ────────────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- ── Row 1: Gauges ────────────────────────────────────────── -->
+    <section class="gauges-row">
+
+      <div class="card gauge-card">
+        <div class="card-header">
+          <span class="card-icon">🖥️</span>
+          <h2 class="card-title">CPU Usage</h2>
+        </div>
+        <div class="gauge-value" id="cpu-value">--</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="cpu-bar" style="width:0%"></div>
+        </div>
+        <div class="gauge-meta" id="cpu-meta">Cores: --</div>
+      </div>
+
+      <div class="card gauge-card">
+        <div class="card-header">
+          <span class="card-icon">⚡</span>
+          <h2 class="card-title">GPU Usage</h2>
+        </div>
+        <div class="gauge-value" id="gpu-value">--</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar gpu-bar" id="gpu-bar" style="width:0%"></div>
+        </div>
+        <div class="gauge-meta" id="gpu-meta">--</div>
+      </div>
+
+      <div class="card gauge-card">
+        <div class="card-header">
+          <span class="card-icon">💾</span>
+          <h2 class="card-title">Memory Usage</h2>
+        </div>
+        <div class="gauge-value" id="mem-value">--</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar mem-bar" id="mem-bar" style="width:0%"></div>
+        </div>
+        <div class="gauge-meta" id="mem-meta">-- / -- GB</div>
+      </div>
+
+      <div class="card gauge-card">
+        <div class="card-header">
+          <span class="card-icon">🔗</span>
+          <h2 class="card-title">PCIe Throughput</h2>
+        </div>
+        <div class="gauge-value" id="pcie-value">--</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar pcie-bar" id="pcie-bar" style="width:0%"></div>
+        </div>
+        <div class="gauge-meta">Max: 16.0 GB/s</div>
+      </div>
+
+    </section>
+
+    <!-- ── Row 2: Chart ─────────────────────────────────────────── -->
+    <section class="chart-row">
+      <div class="card chart-card">
+        <div class="card-header">
+          <span class="card-icon">📈</span>
+          <h2 class="card-title">Historical Usage Trend (last 30 samples)</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="trend-chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Row 3: Bottlenecks + Recommendations ─────────────────── -->
+    <section class="analysis-row">
+
+      <div class="card panel-card">
+        <div class="card-header">
+          <span class="card-icon">🔍</span>
+          <h2 class="card-title">Detected Bottlenecks</h2>
+          <span class="panel-count" id="bottleneck-count">0</span>
+        </div>
+        <div id="bottleneck-list" class="panel-list">
+          <p class="placeholder-text">Click "Run Analysis" or wait for auto-refresh…</p>
+        </div>
+      </div>
+
+      <div class="card panel-card">
+        <div class="card-header">
+          <span class="card-icon">💡</span>
+          <h2 class="card-title">Optimization Recommendations</h2>
+          <span class="panel-count" id="recommend-count">0</span>
+        </div>
+        <div id="recommend-list" class="panel-list">
+          <p class="placeholder-text">Recommendations appear after analysis…</p>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ── Toast notification ───────────────────────────────────────── -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

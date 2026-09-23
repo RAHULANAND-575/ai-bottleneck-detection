@@ -3,137 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Bottleneck Detection</title>
+  <title>PyLite DSA Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <!-- ── Header ──────────────────────────────────────────────────── -->
-  <header class="app-header">
-    <div class="header-left">
-      <span class="header-icon">🧠</span>
-      <div>
-        <h1 class="app-title">AI Bottleneck Detection</h1>
-        <p class="app-subtitle">Heterogeneous Systems Performance Monitor</p>
-      </div>
-    </div>
-    <div class="header-right">
-      <span id="status-badge" class="status-badge status-offline">
-        <span class="status-dot"></span>
-        Offline
-      </span>
-      <button id="run-analysis-btn" class="btn btn-primary" onclick="runAnalysis()">
-        ⚡ Run Analysis
-      </button>
-    </div>
-  </header>
+  <div class="app-shell" id="app-shell">
+    <header class="topbar glass">
+      <button id="menu-btn" class="icon-btn glass" title="Menu">☰</button>
 
-  <!-- ── Main content ────────────────────────────────────────────── -->
-  <main class="main-content">
+      <div class="workspace-tabs" id="tab-strip"></div>
 
-    <!-- ── Row 1: Gauges ────────────────────────────────────────── -->
-    <section class="gauges-row">
-
-      <div class="card gauge-card">
-        <div class="card-header">
-          <span class="card-icon">🖥️</span>
-          <h2 class="card-title">CPU Usage</h2>
-        </div>
-        <div class="gauge-value" id="cpu-value">--</div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar" id="cpu-bar" style="width:0%"></div>
-        </div>
-        <div class="gauge-meta" id="cpu-meta">Cores: --</div>
+      <div class="topbar-actions">
+        <button id="run-btn" class="icon-btn glass action action-run" title="Run Python">▶</button>
+        <button id="stop-btn" class="icon-btn glass action action-stop" title="Stop">■</button>
+        <button id="save-btn" class="icon-btn glass" title="Save (Ctrl+S)">💾</button>
+        <button id="live-btn" class="pill-btn glass" title="Toggle live mode">LIVE</button>
+        <button id="notebook-btn" class="icon-btn glass" title="Notebook">📝</button>
       </div>
 
-      <div class="card gauge-card">
-        <div class="card-header">
-          <span class="card-icon">⚡</span>
-          <h2 class="card-title">GPU Usage</h2>
-        </div>
-        <div class="gauge-value" id="gpu-value">--</div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar gpu-bar" id="gpu-bar" style="width:0%"></div>
-        </div>
-        <div class="gauge-meta" id="gpu-meta">--</div>
+      <div id="menu-popover" class="menu-popover glass hidden">
+        <button id="toggle-tree-btn" class="menu-item">Toggle File Tree</button>
+        <button data-bg="solid" class="menu-item bg-mode">Solid Dark Mode</button>
+        <button data-bg="wallpaper" class="menu-item bg-mode">Wallpaper Mode</button>
+        <label class="menu-item file-label" for="wallpaper-input">Set Wallpaper</label>
+        <input id="wallpaper-input" type="file" accept="image/*" />
       </div>
+    </header>
 
-      <div class="card gauge-card">
-        <div class="card-header">
-          <span class="card-icon">💾</span>
-          <h2 class="card-title">Memory Usage</h2>
-        </div>
-        <div class="gauge-value" id="mem-value">--</div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar mem-bar" id="mem-bar" style="width:0%"></div>
-        </div>
-        <div class="gauge-meta" id="mem-meta">-- / -- GB</div>
-      </div>
+    <main class="workspace-area">
+      <aside id="file-tree-panel" class="file-tree glass"></aside>
 
-      <div class="card gauge-card">
-        <div class="card-header">
-          <span class="card-icon">🔗</span>
-          <h2 class="card-title">PCIe Throughput</h2>
+      <section class="editor-zone">
+        <div class="editor-wrap glass" id="editor-wrap">
+          <textarea id="editor" spellcheck="false" placeholder="# Open or create a Python file\nprint('Hello, DSA learner!')"></textarea>
         </div>
-        <div class="gauge-value" id="pcie-value">--</div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar pcie-bar" id="pcie-bar" style="width:0%"></div>
+        <div id="context-menu" class="context-menu glass hidden">
+          <button data-action="run-selection">Run Selection</button>
+          <button data-action="save-note">Save as Note</button>
+          <button data-action="stop">Stop</button>
+          <button data-action="toggle-live">Toggle Live Mode</button>
         </div>
-        <div class="gauge-meta">Max: 16.0 GB/s</div>
-      </div>
 
-    </section>
+        <section class="output-panel glass">
+          <div class="output-head">
+            <span>OUTPUT</span>
+            <span id="run-status" class="run-status">IDLE</span>
+          </div>
+          <pre id="output"></pre>
+        </section>
+      </section>
+    </main>
 
-    <!-- ── Row 2: Chart ─────────────────────────────────────────── -->
-    <section class="chart-row">
-      <div class="card chart-card">
-        <div class="card-header">
-          <span class="card-icon">📈</span>
-          <h2 class="card-title">Historical Usage Trend (last 30 samples)</h2>
-        </div>
-        <div class="chart-container">
-          <canvas id="trend-chart"></canvas>
+    <aside id="notebook-drawer" class="notebook-drawer glass hidden">
+      <div class="notebook-head">
+        <h2>DSA Notes</h2>
+        <div class="notebook-actions">
+          <button id="add-category-btn" class="pill-btn glass">+ Category</button>
+          <button id="add-note-btn" class="pill-btn glass">+ Note</button>
+          <label class="expand-toggle"><input id="expand-all" type="checkbox" /> Expand all</label>
         </div>
       </div>
-    </section>
-
-    <!-- ── Row 3: Bottlenecks + Recommendations ─────────────────── -->
-    <section class="analysis-row">
-
-      <div class="card panel-card">
-        <div class="card-header">
-          <span class="card-icon">🔍</span>
-          <h2 class="card-title">Detected Bottlenecks</h2>
-          <span class="panel-count" id="bottleneck-count">0</span>
-        </div>
-        <div id="bottleneck-list" class="panel-list">
-          <p class="placeholder-text">Click "Run Analysis" or wait for auto-refresh…</p>
-        </div>
-      </div>
-
-      <div class="card panel-card">
-        <div class="card-header">
-          <span class="card-icon">💡</span>
-          <h2 class="card-title">Optimization Recommendations</h2>
-          <span class="panel-count" id="recommend-count">0</span>
-        </div>
-        <div id="recommend-list" class="panel-list">
-          <p class="placeholder-text">Recommendations appear after analysis…</p>
-        </div>
-      </div>
-
-    </section>
-
-  </main>
-
-  <!-- ── Toast notification ───────────────────────────────────────── -->
-  <div id="toast" class="toast hidden"></div>
+      <div id="notes-container" class="notes-container"></div>
+    </aside>
+  </div>
 
   <script src="app.js"></script>
 </body>

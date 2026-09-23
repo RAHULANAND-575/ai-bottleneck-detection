@@ -12,6 +12,7 @@ from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+from werkzeug.utils import safe_join
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 WORKSPACE_ROOT = BASE_DIR
@@ -29,17 +30,23 @@ def ok(data):
 
 
 def err(message, code=400):
-    return jsonify({"status": "error", "message": message}), code
+    return jsonify({"status": "error", "message": str(message)}), code
 
 
 def safe_rel_path(raw_path: str) -> Path:
     if not raw_path:
         raise ValueError("Path is required")
-    rel = Path(raw_path)
-    if rel.suffix != ".py":
+    joined = safe_join(str(WORKSPACE_ROOT), raw_path)
+    if not joined:
+        raise ValueError("Invalid path")
+    resolved = Path(joined).resolve()
+    if resolved.suffix != ".py":
         raise ValueError("Only Python files are supported")
-    resolved = (WORKSPACE_ROOT / rel).resolve()
-    if not str(resolved).startswith(str(WORKSPACE_ROOT.resolve())):
+    try:
+        resolved.relative_to(WORKSPACE_ROOT.resolve())
+    except ValueError as exc:
+        raise ValueError("Invalid path") from exc
+    if not resolved.name:
         raise ValueError("Invalid path")
     return resolved
 
@@ -137,24 +144,25 @@ def api_tree():
 @app.route("/api/files/read")
 def api_read_file():
     try:
-        path = safe_rel_path(request.args.get("path", ""))
-        return ok({"path": request.args.get("path"), "content": path.read_text(encoding="utf-8")})
+        req_path = request.args.get("path", "")
+        path = safe_rel_path(req_path)
+        return ok({"path": req_path, "content": path.read_text(encoding="utf-8")})
     except FileNotFoundError:
         return err("File not found", 404)
-    except ValueError as exc:
-        return err(str(exc), 400)
+    except ValueError:
+        return err("Invalid Python file path", 400)
 
 
 @app.route("/api/files/save", methods=["POST"])
 def api_save_file():
     payload = request.get_json(silent=True) or {}
     try:
-        path = safe_rel_path(payload.get("path", ""))
+        path = safe_rel_path(str(payload.get("path", "")))
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(str(payload.get("content", "")), encoding="utf-8")
         return ok({"saved": True})
-    except ValueError as exc:
-        return err(str(exc), 400)
+    except ValueError:
+        return err("Invalid Python file path", 400)
 
 
 @app.route("/api/run", methods=["POST"])
